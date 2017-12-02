@@ -11,7 +11,7 @@ class Agent(object):
         self.__platform_access = platform_access
 
     def get_platform_access(self):
-        return self.__platform_access;
+        return self.__platform_access
 
     def get_boards(self):
         boards = []
