@@ -7,12 +7,14 @@ import traceback
 import websocket
 
 import logger
+from layout import layouts
 from own_adapter.agent import Agent
 from own_adapter.board import Board
 from own_adapter.element import Element
 from own_adapter.platform_access import PlatformAccess
 from services import main, vk
 from settings import AGENT_LOGIN, AGENT_PASSWORD
+from sn_adapter.twitter import Twitter
 
 CURRENT_LOGGER = 'aeronaut\'s logger'
 twitter_api = None
@@ -26,20 +28,6 @@ def __show_tweets(element, links):
 
     for tw in links:
         element.put_link(tw)
-
-
-def __do_something(element):
-    """Write your code here"""
-
-    # logger.debug("....do_something_shit...")
-    # # examples:
-    # # put a message to a board
-    # message = 'Hello world!'
-    # element.get_board().put_message(message)
-    #
-    # # put a URL to an element
-    # url = 'https://www.own.space/'
-    # element.put_link(url)
 
 
 def __run_on_element(element, links):
@@ -96,9 +84,9 @@ def on_websocket_message(ws, message):
         if re.match(pattern='(@twitter:.+)|(@tw:.+)', string=element_caption):
             tags = element_caption.split(":")[-1].split()
 
-            # twitter_api = Twitter()
-            # twitts = twitter_api.get_msg_by_tags(" ".join(tags))
-            # links = map(lambda x: "https://twitter.com/%s/status/%s" % (x.author.name, x.id_str), twitts)
+            twitter_api = Twitter()
+            twitts = twitter_api.get_msg_by_tags(" ".join(tags))
+            links = map(lambda x: "https://twitter.com/%s/status/%s" % (x.author.name, x.id_str), twitts)
 
             logger.debug(CURRENT_LOGGER, "twitter keywords: %s" % tags)
             element_id = message_dict['path']
@@ -108,9 +96,6 @@ def on_websocket_message(ws, message):
             element = Element.get_element_by_id(element_id, news_agent.get_platform_access(), board)
 
             # subscribe_keyword_vk(tags, board_id.split('/')[-1] + '_' + element_id)
-
-            # if element is not None:
-            #     __run_on_element(element, links)
 
     elif message_type == 'liveUpdateActivitiesUpdated+json':
         logger.debug(CURRENT_LOGGER, "liveUpdateActivitiesUpdated")
@@ -127,15 +112,15 @@ def on_websocket_message(ws, message):
             elements = msg.split()
             tag = msg.split()[-1].lstrip("#")
             sn_account = tuple(map(lambda x: x.strip("@"), msg.split()[1:-1]))
-            board_element = board_id.split('/')[-1] + '_' + element_id
+            board = board_id.split('/')[-1]
 
             try:
                 if 'tw' in sn_account:
                     main.twitter_stream.running = False
-                    main.subscribe_keyword_twitter(keyword=tag, element=board_element)
+                    main.subscribe_keyword_twitter(keyword=tag, element=board)
                 if 'vk' in sn_account:
                     vk.api.stop()
-                    main.subscribe_keyword_vk(keyword=tag, element=board_element)
+                    main.subscribe_keyword_vk(keyword=tag, element=board)
             except Exception as e:
                 logger.error(CURRENT_LOGGER, e)
 
