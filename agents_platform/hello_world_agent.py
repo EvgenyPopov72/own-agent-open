@@ -11,14 +11,27 @@ from own_adapter.agent import Agent
 from own_adapter.board import Board
 from own_adapter.element import Element
 from own_adapter.platform_access import PlatformAccess
+from settings import AGENT_LOGIN, AGENT_PASSWORD
+from sn_adapter.twitter import Twitter
 
-AGENT_LOGIN = ''
-AGENT_PASSWORD = ''
+CURRENT_LOGGER = 'aeronaft\'s logger'
+twitter_api = None
+
+
+def __show_tweets(element, links):
+    logger.debug(CURRENT_LOGGER, "show tweets")
+
+    message = "show tweets"
+    element.get_board().put_message(message)
+
+    for tw in links:
+        element.put_link(tw)
 
 
 def __do_something(element):
     """Write your code here"""
 
+    logger.debug("....do_something_shit...")
     # examples:
     # put a message to a board
     message = 'Hello world!'
@@ -29,13 +42,13 @@ def __do_something(element):
     element.put_link(url)
 
 
-def __run_on_element(element):
+def __run_on_element(element, links):
     """Running on a target element"""
     try:
-        __do_something(element)
+        __show_tweets(element, links)
     except Exception as ex:
-        logger.exception('helloworld', 'Error: could not process an element. Element id: {}. Exception message: {}.\n'
-                                       '{}'.format(element.get_id(), str(ex), traceback.format_exc()))
+        logger.exception(CURRENT_LOGGER, 'Error: could not process an element. Element id: {}. Exception message: {}.\n'
+                                         '{}'.format(element.get_id(), str(ex), traceback.format_exc()))
 
 
 def __run_on_board(board):
@@ -56,7 +69,7 @@ def periodical_update():
         boards = agent.get_boards()
         for board in boards:
             __run_on_board(board)
-        logger.info('helloworld', 'Daily news update is done.')
+        logger.info(CURRENT_LOGGER, 'Daily news update is done.')
 
 
 def get_agent():
@@ -65,9 +78,9 @@ def get_agent():
     password = AGENT_PASSWORD
 
     platform_access = PlatformAccess(login, password)
-    helloworld_agent = Agent(platform_access)
+    agent = Agent(platform_access)
 
-    return helloworld_agent
+    return agent
 
 
 def on_websocket_message(ws, message):
@@ -76,35 +89,52 @@ def on_websocket_message(ws, message):
     content_type = message_dict['contentType']
     message_type = content_type.replace('application/vnd.uberblik.', '')
 
-    logger.debug('helloworld', message)
+    logger.debug(CURRENT_LOGGER, message)
 
     if message_type == 'liveUpdateElementCaptionEdited+json':
         element_caption = message_dict['newCaption']
         # looking for elements that target our agent
-        if re.match(pattern='@helloworld:.+', string=element_caption):
-            # create instances of Board and Element to work with them
+        if re.match(pattern='(@twitter:.+)|(@tw:.+)', string=element_caption):
+            tags = element_caption.split(":")[-1].split()
+
+            twitter_api = Twitter()
+            twitts = twitter_api.get_msg_by_tags(" ".join(tags))
+            links = map(lambda x: "https://twitter.com/%s/status/%s" % (x.author.name, x.id_str), twitts)
+
+            logger.debug(CURRENT_LOGGER, "twitter keywords: %s" % tags)
             element_id = message_dict['path']
             news_agent = get_agent()
             board_id = '/'.join(element_id.split('/')[:-2])
             board = Board.get_board_by_id(board_id, news_agent.get_platform_access(), need_name=False)
             element = Element.get_element_by_id(element_id, news_agent.get_platform_access(), board)
             if element is not None:
-                __run_on_element(element)
+                __run_on_element(element, links)
+
+        # elif re.match(pattern='@helloworld:.+', string=element_caption):
+        #     logger.debug(CURRENT_LOGGER, "helloworld")
+        #     # create instances of Board and Element to work with them
+        #     element_id = message_dict['path']
+        #     news_agent = get_agent()
+        #     board_id = '/'.join(element_id.split('/')[:-2])
+        #     board = Board.get_board_by_id(board_id, news_agent.get_platform_access(), need_name=False)
+        #     element = Element.get_element_by_id(element_id, news_agent.get_platform_access(), board)
+        #     if element is not None:
+        #         __run_on_element(element)
 
 
 def on_websocket_error(ws, error):
     """Logs websocket errors"""
-    logger.error('helloworld', error)
+    logger.error(CURRENT_LOGGER, error)
 
 
 def on_websocket_open(ws):
     """Logs websocket openings"""
-    logger.info('helloworld', 'Websocket is open')
+    logger.info(CURRENT_LOGGER, 'Websocket is open')
 
 
 def on_websocket_close(ws):
     """Logs websocket closings"""
-    logger.info('helloworld', 'Websocket is closed')
+    logger.info(CURRENT_LOGGER, 'Websocket is closed')
 
 
 def open_websocket():
@@ -134,7 +164,7 @@ def run():
                 websocket_thread = threading.Thread(target=open_websocket)
                 websocket_thread.start()
             except Exception as e:
-                logger.exception('helloworld', 'Could not open a websocket. Exception message: {}'.format(str(e)))
+                logger.exception(CURRENT_LOGGER, 'Could not open a websocket. Exception message: {}'.format(str(e)))
 
         # periodical updates
         if updater_thread is None or not updater_thread.is_alive():
@@ -142,7 +172,7 @@ def run():
                 updater_thread = threading.Thread(target=periodical_update)
                 updater_thread.start()
             except Exception as e:
-                logger.exception('helloworld', 'Could not start updater. Exception message: {}'.format(str(e)))
+                logger.exception(CURRENT_LOGGER, 'Could not start updater. Exception message: {}'.format(str(e)))
 
         # wait until next check
         time.sleep(10)
