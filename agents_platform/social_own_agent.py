@@ -11,10 +11,10 @@ from own_adapter.agent import Agent
 from own_adapter.board import Board
 from own_adapter.element import Element
 from own_adapter.platform_access import PlatformAccess
-from services.main import subscribe_keyword_vk, subscribe_keyword_twitter
+from services import main, vk
 from settings import AGENT_LOGIN, AGENT_PASSWORD
 
-CURRENT_LOGGER = 'aeronaft\'s logger'
+CURRENT_LOGGER = 'aeronaut\'s logger'
 twitter_api = None
 
 
@@ -31,15 +31,15 @@ def __show_tweets(element, links):
 def __do_something(element):
     """Write your code here"""
 
-    logger.debug("....do_something_shit...")
-    # examples:
-    # put a message to a board
-    message = 'Hello world!'
-    element.get_board().put_message(message)
-
-    # put a URL to an element
-    url = 'https://www.own.space/'
-    element.put_link(url)
+    # logger.debug("....do_something_shit...")
+    # # examples:
+    # # put a message to a board
+    # message = 'Hello world!'
+    # element.get_board().put_message(message)
+    #
+    # # put a URL to an element
+    # url = 'https://www.own.space/'
+    # element.put_link(url)
 
 
 def __run_on_element(element, links):
@@ -59,7 +59,7 @@ def __run_on_board(board):
 
 
 def periodical_update():
-    """Does periodical work with a predefined time interval"""
+    """Does periodical work with a predefined last_time interval"""
     time_interval = 86400
 
     while True:
@@ -109,8 +109,8 @@ def on_websocket_message(ws, message):
 
             # subscribe_keyword_vk(tags, board_id.split('/')[-1] + '_' + element_id)
 
-            if element is not None:
-                # __run_on_element(element, links)
+            # if element is not None:
+            #     __run_on_element(element, links)
 
     elif message_type == 'liveUpdateActivitiesUpdated+json':
         logger.debug(CURRENT_LOGGER, "liveUpdateActivitiesUpdated")
@@ -127,13 +127,19 @@ def on_websocket_message(ws, message):
             elements = msg.split()
             tag = msg.split()[-1].lstrip("#")
             sn_account = tuple(map(lambda x: x.strip("@"), msg.split()[1:-1]))
+            board_element = board_id.split('/')[-1] + '_' + element_id
 
-            if 'tw' in sn_account:
-                subscribe_keyword_twitter()
-            if 'vk' in sn_account:
-                subscribe_keyword_vk(tag, board_id.split('/')[-1] + '_' + element_id)
+            try:
+                if 'tw' in sn_account:
+                    main.twitter_stream.running = False
+                    main.subscribe_keyword_twitter(keyword=tag, element=board_element)
+                if 'vk' in sn_account:
+                    vk.api.stop()
+                    main.subscribe_keyword_vk(keyword=tag, element=board_element)
+            except Exception as e:
+                logger.error(CURRENT_LOGGER, e)
 
-        elif re.match(pattern='(/unbscribe .+)', string=msg):
+        elif re.match(pattern='(/unsubscribe .+)', string=msg):
             pass
 
 
