@@ -1,6 +1,7 @@
 import atexit
 import queue
 import logger
+import json
 import threading
 
 
@@ -39,3 +40,22 @@ def _cleanup():
     _queue.join()   # so we don't exit too soon
 
 atexit.register(_cleanup)
+
+
+def read_data(filename):
+    try:
+        with open('agents_platform/storage/' + filename) as f:
+            # dic = json.load(f)
+            return json.load(f)
+    except Exception as e:
+        logger.error(__name__, e)
+        return {}
+
+
+def write_data(filename, data):
+    try:
+        with open('agents_platform/storage/' + filename, 'w', encoding='utf-8') as f:
+            f.write(json.dumps(data, ensure_ascii=False))
+            f.flush()
+    except Exception as e:
+        logger.error(__name__, e)

@@ -1,7 +1,9 @@
 import time
 import logger
+import json
 import tweepy
 import settings
+from services import utils
 from agents_platform.services import twitter, vk
 
 twitter_listener = twitter.TwitterStream()
@@ -9,14 +11,14 @@ twitter_stream = tweepy.Stream(auth=twitter_listener.auth, listener=twitter_list
 
 # logger = logging.getLogger(__name__)
 
-twitter_subscriptions = settings.twitter_subscriptions
-vk_subscriptions = settings.vk_subscriptions
+# twitter_subscriptions = json.load(open('agent_platform/tw_subscriptions.json'))
+# vk_subscriptions = settings.vk_subscriptions
 
 
 def run():
     # subscribe_keyword_twitter('Trump', 4567)
     subscribe_keyword_vk('Путин', 9000)
-    print("Check what the fuck is happening")
+    # print("Check what the fuck is happening")
 
 
 def start_twitter():
@@ -24,10 +26,14 @@ def start_twitter():
 
 
 def subscribe_keyword_vk(keyword, element):
+
+    vk_subscriptions = utils.read_data('vk_subscriptions.json')
+
     if keyword in vk_subscriptions:
         vk_subscriptions[keyword].append(element)
     else:
         vk_subscriptions[keyword] = [element]
+    utils.write_data('vk_subscriptions.json', vk_subscriptions)
 
     api = vk.api
     api.del_all_rules()
@@ -39,38 +45,31 @@ def subscribe_keyword_vk(keyword, element):
 
     api.start()
 
-    # @api.stream
-    # def my_func(event):
-    #     if event['type'] == 'post':
-    #         for tag in event['tags']:
-    #             if tag in vk_subscriptions:
-    #                 # call vk interface method
-    #                 print(event)
-        # print("[{}]: {}".format(event['author']['id'], event['text']))
 
-
-
-
-def unsubscribe_keyword_twitter(keyword, board):
+def unsubscribe_keyword_twitter(keyword, element):
+    twitter_subscriptions = utils.read_data('tw_subscriptions.json')
     if keyword in twitter_subscriptions:
-        if board in twitter_subscriptions[keyword]:
-            twitter_subscriptions[keyword].remove(board)
+        if element in twitter_subscriptions[keyword]:
+            twitter_subscriptions[keyword].remove(element)
+            utils.write_data('tw_subscriptions.json', twitter_subscriptions)
             return True
 
     return False
 
 
-def subscribe_keyword_twitter(keyword, board):
+def subscribe_keyword_twitter(keyword, element):
+    twitter_subscriptions = utils.read_data('tw_subscriptions.json')
     if keyword in twitter_subscriptions:
-        twitter_subscriptions[keyword].append(board)
+        twitter_subscriptions[keyword].append(element)
     else:
-        twitter_subscriptions[keyword] = [board]
+        twitter_subscriptions[keyword] = [element]
+    utils.write_data('tw_subscriptions.json', twitter_subscriptions)
     try:
 
-        twitter_stream.filter(track=list(twitter_subscriptions.keys()))
+        twitter_stream.filter(track=list(twitter_subscriptions.keys()),  stall_warnings=True)
     except tweepy.RateLimitError:
         print("Rate limit error")
-        # time.sleep(15*60)
+        # last_time.sleep(15*60)
     except tweepy.TweepError as e:
         logger.error(__name__, "TweepError: {}".format(e))
 

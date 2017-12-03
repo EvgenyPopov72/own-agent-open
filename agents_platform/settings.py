@@ -15,8 +15,6 @@ ACCESS_TOKEN = '795153990224932864-HZnjqVhVhch790LZtW0wEFchLGJG4GE'
 ACCESS_TOKEN_SECRET = 'REzpQe0FGvcXkVRUahWyeFSYr9mMcdSxCenxlOQIDBJUS'
 
 
-twitter_subscriptions = {}
-
 VK_KEY = '3bf0258fc9a942b3625640b70af5ea3288d99aeb'
 
 vk_subscriptions = {}
