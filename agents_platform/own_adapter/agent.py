@@ -1,6 +1,8 @@
 import json
 import urllib
 from urllib import request
+from own_adapter.platform_access import PlatformAccess
+from settings import AGENT_LOGIN, AGENT_PASSWORD
 
 import logger
 from own_adapter.board import Board
@@ -40,3 +42,14 @@ class Agent(object):
             identifier = href.split('/')[-1]
             boards.append(Board(self.__platform_access, name, href, identifier))
         return boards
+
+
+def get_agent():
+    """Returns the current agent"""
+    login = AGENT_LOGIN
+    password = AGENT_PASSWORD
+
+    platform_access = PlatformAccess(login, password)
+    agent = Agent(platform_access)
+
+    return agent

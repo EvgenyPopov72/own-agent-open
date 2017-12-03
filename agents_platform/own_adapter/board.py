@@ -112,7 +112,7 @@ class Board:
 
         response = request.urlopen(board_request)
         response_body = response.read().decode()
-        return map(lambda x: x.get("details").get("post"), json.loads(response_body)["activities"])
+        return tuple(map(lambda x: x.get("details").get("post"), json.loads(response_body)["activities"]))
 
     def get_last_message(self):
         return self.get_message()[0]

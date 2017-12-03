@@ -11,8 +11,8 @@ from layout import layouts
 from own_adapter.agent import Agent
 from own_adapter.board import Board
 from own_adapter.element import Element
-from own_adapter.platform_access import PlatformAccess
 from services import main, vk
+from own_adapter.agent import get_agent
 from settings import AGENT_LOGIN, AGENT_PASSWORD
 from sn_adapter.twitter import Twitter
 
@@ -60,15 +60,15 @@ def periodical_update():
         logger.info(CURRENT_LOGGER, 'Daily news update is done.')
 
 
-def get_agent():
-    """Returns the current agent"""
-    login = AGENT_LOGIN
-    password = AGENT_PASSWORD
-
-    platform_access = PlatformAccess(login, password)
-    agent = Agent(platform_access)
-
-    return agent
+# def get_agent():
+#     """Returns the current agent"""
+#     login = AGENT_LOGIN
+#     password = AGENT_PASSWORD
+#
+#     platform_access = PlatformAccess(login, password)
+#     agent = Agent(platform_access)
+#
+#     return agent
 
 
 def on_websocket_message(ws, message):
@@ -116,10 +116,12 @@ def on_websocket_message(ws, message):
 
             try:
                 if 'tw' in sn_account:
-                    main.twitter_stream.running = False
+                    if main.twitter_stream:
+                        main.twitter_stream.running = False
                     main.subscribe_keyword_twitter(keyword=tag, element=board)
                 if 'vk' in sn_account:
-                    vk.api.stop()
+                    if vk.api:
+                        vk.api.stop()
                     main.subscribe_keyword_vk(keyword=tag, element=board)
             except Exception as e:
                 logger.error(CURRENT_LOGGER, e)

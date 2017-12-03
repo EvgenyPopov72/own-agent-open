@@ -2,6 +2,8 @@ import time
 import datetime
 import logger
 import tweepy
+
+from handler import tw_handler
 from services import utils
 from agents_platform import settings
 
@@ -17,7 +19,7 @@ class TwitterStream(tweepy.StreamListener):
         self.auth.set_access_token(settings.ACCESS_TOKEN, settings.ACCESS_TOKEN_SECRET)
 
         self.api = tweepy.API(self.auth)
-        self.last_time = datetime.datetime.now() + datetime.timedelta(minutes=1)
+        self.last_time = datetime.datetime.now()
         self.data = []
 
     # def on_data(self, raw_data):
@@ -36,14 +38,16 @@ class TwitterStream(tweepy.StreamListener):
         for keyword in twitter_subscriptions:
             print(keyword)
             if keyword.lower() in tweet.text.lower():
-                if datetime.datetime.now() - self.last_time <= datetime.timedelta(seconds=5):
-                    self.data.append(tweet)
-                    print("not yet time " + tweet.text)
-                    return
+                # if datetime.datetime.now() - self.last_time <= datetime.timedelta(seconds=1):
+                #     self.data.append(tweet)
+                #     print("not yet time " + tweet.text)
+                #     return
                 self.last_time = datetime.datetime.now()
                 #call interface function with tweet and twitter_subscriptions[keyword]
+                tw_handler(self.data, board=twitter_subscriptions[keyword])
                 for tweet in self.data[:15]:
                     print(tweet.text)
+                self.data = []
 
     def on_error(self, status_code):
         if status_code == 420:

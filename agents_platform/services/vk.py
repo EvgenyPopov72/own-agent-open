@@ -30,7 +30,8 @@ def handle_result(event):
                 else:
                     last_time = datetime.datetime.now()
                     # call interface function with tweet and twitter_subscriptions[keyword]
-                    # from agents_platform.handler import vk_handler
-                    # vk_handler(data, vk_subscriptions['tag'])
+                    from agents_platform.handler import vk_handler
+                    vk_handler(data, vk_subscriptions['tag'])
                     for event in data:
                         print(event)
+                    data = []

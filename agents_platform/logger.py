@@ -17,7 +17,7 @@ import os
 
 LOGS_DIRECTORY_PATH = './logs'
 
-known_loggers = ['own_adapter', 'helloworld', 'aeronaft\'s logger']
+known_loggers = ['own_adapter', 'helloworld', 'aeronaut\'s logger']
 levels = {'Debug': 0, 'Info': 1, 'Warning': 2, 'Error': 3, 'Exception': 4}
 
 # we can get the level from config, or change it while debugging

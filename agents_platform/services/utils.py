@@ -17,7 +17,7 @@ def _worker():
         func, args, kwargs = _queue.get()
         try:
             func(*args, **kwargs)
-        except:
+        except Exception as e:
             import traceback
             details = traceback.format_exc()
             logger.error(__name__, details)

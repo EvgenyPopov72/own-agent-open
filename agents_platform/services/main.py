@@ -16,8 +16,8 @@ twitter_stream = tweepy.Stream(auth=twitter_listener.auth, listener=twitter_list
 
 
 def run():
-    # subscribe_keyword_twitter('Trump', 4567)
-    subscribe_keyword_vk('Путин', 9000)
+    subscribe_keyword_twitter('Trump', '49')
+    # subscribe_keyword_vk('Путин', '49')
     # print("Check what the fuck is happening")
 
 
