@@ -11,8 +11,8 @@ from own_adapter.agent import Agent
 from own_adapter.board import Board
 from own_adapter.element import Element
 from own_adapter.platform_access import PlatformAccess
+from services.main import subscribe_keyword_vk, subscribe_keyword_twitter
 from settings import AGENT_LOGIN, AGENT_PASSWORD
-from sn_adapter.twitter import Twitter
 
 CURRENT_LOGGER = 'aeronaft\'s logger'
 twitter_api = None
@@ -93,13 +93,12 @@ def on_websocket_message(ws, message):
 
     if message_type == 'liveUpdateElementCaptionEdited+json':
         element_caption = message_dict['newCaption']
-        # looking for elements that target our agent
         if re.match(pattern='(@twitter:.+)|(@tw:.+)', string=element_caption):
             tags = element_caption.split(":")[-1].split()
 
-            twitter_api = Twitter()
-            twitts = twitter_api.get_msg_by_tags(" ".join(tags))
-            links = map(lambda x: "https://twitter.com/%s/status/%s" % (x.author.name, x.id_str), twitts)
+            # twitter_api = Twitter()
+            # twitts = twitter_api.get_msg_by_tags(" ".join(tags))
+            # links = map(lambda x: "https://twitter.com/%s/status/%s" % (x.author.name, x.id_str), twitts)
 
             logger.debug(CURRENT_LOGGER, "twitter keywords: %s" % tags)
             element_id = message_dict['path']
@@ -107,19 +106,35 @@ def on_websocket_message(ws, message):
             board_id = '/'.join(element_id.split('/')[:-2])
             board = Board.get_board_by_id(board_id, news_agent.get_platform_access(), need_name=False)
             element = Element.get_element_by_id(element_id, news_agent.get_platform_access(), board)
-            if element is not None:
-                __run_on_element(element, links)
 
-        # elif re.match(pattern='@helloworld:.+', string=element_caption):
-        #     logger.debug(CURRENT_LOGGER, "helloworld")
-        #     # create instances of Board and Element to work with them
-        #     element_id = message_dict['path']
-        #     news_agent = get_agent()
-        #     board_id = '/'.join(element_id.split('/')[:-2])
-        #     board = Board.get_board_by_id(board_id, news_agent.get_platform_access(), need_name=False)
-        #     element = Element.get_element_by_id(element_id, news_agent.get_platform_access(), board)
-        #     if element is not None:
-        #         __run_on_element(element)
+            # subscribe_keyword_vk(tags, board_id.split('/')[-1] + '_' + element_id)
+
+            if element is not None:
+                # __run_on_element(element, links)
+
+    elif message_type == 'liveUpdateActivitiesUpdated+json':
+        logger.debug(CURRENT_LOGGER, "liveUpdateActivitiesUpdated")
+
+        element_id = message_dict['path']
+        news_agent = get_agent()
+        board_id = '/boards/' + element_id.split('/')[-1]
+        board = Board.get_board_by_id(board_id, news_agent.get_platform_access(), need_name=False)
+        # element = Element.get_element_by_id(element_id, news_agent.get_platform_access(), board)
+        msg = board.get_last_message()
+        logger.debug(CURRENT_LOGGER, msg)
+
+        if re.match(pattern='(/subscribe .+)', string=msg):
+            elements = msg.split()
+            tag = msg.split()[-1].lstrip("#")
+            sn_account = tuple(map(lambda x: x.strip("@"), msg.split()[1:-1]))
+
+            if 'tw' in sn_account:
+                subscribe_keyword_twitter()
+            if 'vk' in sn_account:
+                subscribe_keyword_vk(tag, board_id.split('/')[-1] + '_' + element_id)
+
+        elif re.match(pattern='(/unbscribe .+)', string=msg):
+            pass
 
 
 def on_websocket_error(ws, error):
