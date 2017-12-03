@@ -1,9 +1,8 @@
 import time
+import datetime
 import logger
 import tweepy
 from agents_platform import settings
-
-# logger = logging.getLogger(__name__)
 
 
 twitter_subscriptions = settings.twitter_subscriptions
@@ -17,9 +16,19 @@ class TwitterStream(tweepy.StreamListener):
         self.auth.set_access_token(settings.ACCESS_TOKEN, settings.ACCESS_TOKEN_SECRET)
 
         self.api = tweepy.API(self.auth)
+        self.time = datetime.datetime.now() + datetime.timedelta(minutes=5)
+        self.data = []
 
     def on_status(self, tweet):
-        print(tweet.text)
+        for keyword in twitter_subscriptions:
+            if keyword in tweet.text:
+                if datetime.datetime.now() - self.time <= datetime.timedelta(minutes=5):
+                    self.data.append(tweet)
+                else:
+                    self.time = datetime.datetime.now()
+                    #call interface function with tweet and twitter_subscriptions[keyword]
+                    for tweet in self.data:
+                        print(tweet.text)
 
     def on_error(self, status_code):
         if status_code == 420:

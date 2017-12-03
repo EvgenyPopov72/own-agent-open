@@ -7,3 +7,7 @@ ACCESS_TOKEN_SECRET = 'REzpQe0FGvcXkVRUahWyeFSYr9mMcdSxCenxlOQIDBJUS'
 
 
 twitter_subscriptions = {}
+
+VK_KEY = '3bf0258fc9a942b3625640b70af5ea3288d99aeb'
+
+vk_subscriptions = {}
