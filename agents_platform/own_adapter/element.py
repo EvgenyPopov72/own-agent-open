@@ -193,6 +193,32 @@ class Element:
                                                                                            str(e)))
             return e.code
 
+    def clear_element(self):
+        """Clear element"""
+        try:
+            http_method = 'DELETE'
+            detail = 'board'
+            url = self.__url + '/files'
+            values = {}
+
+            headers = self.__platform_access.get_headers(http_method, url, values, detail)
+
+            remove_request = request.Request(url, headers=headers)
+            remove_request.get_method = lambda: 'DELETE'
+
+            response = request.urlopen(remove_request)
+            response_status = response.getcode()
+
+            logger.debug('own_adapter', response_status)
+
+            return response_status
+        except urllib.error.HTTPError as e:
+            logger.exception('own_adapter',
+                             'Error: remove file {} from {} failed. Error type: {}'.format(file_link, self.get_name(),
+                                                                                           str(e)))
+            return e.code
+
+
     @staticmethod
     def get_element_by_id(element_id, platform_access, board):
         """Gets an element by its id and returns it"""
