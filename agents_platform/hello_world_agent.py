@@ -109,6 +109,26 @@ def on_websocket_message(ws, message):
             element = Element.get_element_by_id(element_id, news_agent.get_platform_access(), board)
             if element is not None:
                 __run_on_element(element, links)
+    elif message_type == 'liveUpdateActivitiesUpdated+json':
+        logger.debug(CURRENT_LOGGER, "liveUpdateActivitiesUpdated")
+
+        element_id = message_dict['path']
+        news_agent = get_agent()
+        board_id = '/boards/' + element_id.split('/')[-1]
+        board = Board.get_board_by_id(board_id, news_agent.get_platform_access(), need_name=False)
+        # element = Element.get_element_by_id(element_id, news_agent.get_platform_access(), board)
+        msg = board.get_last_message()
+        logger.debug(CURRENT_LOGGER, msg)
+
+        if re.match(pattern='(/subscribe .+)', string=msg):
+            elements = msg.split()
+            tag = msg.split()[-1].lstrip("#")
+            sn_account = tuple(map(lambda x: x.strip("@"), msg.split()[1:-1]))
+
+
+        elif re.match(pattern='(/unbscribe .+)', string=msg):
+            pass
+
 
         # elif re.match(pattern='@helloworld:.+', string=element_caption):
         #     logger.debug(CURRENT_LOGGER, "helloworld")

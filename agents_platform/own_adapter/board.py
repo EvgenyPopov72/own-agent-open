@@ -98,6 +98,25 @@ class Board:
 
         return response_status
 
+    def get_message(self):
+        """Returns board msgs"""
+        http_method = 'GET'
+        detail = 'board'
+        url = self.__url + '/activities'
+        values = {}
+
+        headers = self.__platform_access.get_headers(http_method, url, values, detail)
+
+        board_request = request.Request(url, headers=headers)
+        board_request.get_method = lambda: http_method
+
+        response = request.urlopen(board_request)
+        response_body = response.read().decode()
+        return map(lambda x: x.get("details").get("post"), json.loads(response_body)["activities"])
+
+    def get_last_message(self):
+        return self.get_message()[0]
+
     def __get_board_size(self):
         """Returns board size"""
         http_method = 'GET'
